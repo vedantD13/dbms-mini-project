@@ -13,6 +13,7 @@ import Dashboard from './pages/Dashboard';
 import MovieInfo from './pages/MovieInfo';
 import Showtimes from './pages/Showtimes';
 import Checkout from './pages/Checkout';
+import AdminDashboard from './pages/AdminDashboard';
 
 export default function App() {
   return (
@@ -20,15 +21,23 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<MainLayout />}>
-            {/* Public Routes */}
+            
+            {/* PUBLIC ROUTES (Anyone can view these) */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/movie/:id" element={<MovieInfo />} />
             <Route path="/buytickets/:id" element={<Showtimes />} />
-            <Route path="/checkout" element={<Checkout />} />
             
-            {/* Protected Route */}
+            {/* PROTECTED ROUTES (MANDATORY SIGN-IN) */}
+            <Route 
+              path="/checkout" 
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/dashboard" 
               element={
@@ -37,6 +46,15 @@ export default function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
           </Route>
         </Routes>
       </BrowserRouter>
