@@ -30,10 +30,10 @@ body {
   background-color: rgba(220, 38, 38, 0.3); /* Red-600 with opacity */
   color: white;
 }
-/* Hide default cursor to use the custom Framer Motion cursor */
-body, a, button, input, select {
-  cursor: none !important;
-}
+
+/* REMOVED: The rule hiding default cursors (body, a, button, input, select { cursor: none !important; }) 
+*/
+
 .perspective-1000 { perspective: 1000px; }
 .preserve-3d { transform-style: preserve-3d; }
 .backface-hidden { backface-visibility: hidden; }

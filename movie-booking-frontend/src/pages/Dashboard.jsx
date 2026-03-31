@@ -1,119 +1,172 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Ticket, Clock, CreditCard, Film } from 'lucide-react';
-import TicketReceipt from '../components/TicketReceipt'; 
-import MovieCard from '../components/MovieCard'; // Reusing our awesome movie card!
+import { Ticket, History, Settings, Calendar, Clock, Film } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
+import CinemaMap from '../components/CinemaMap';
 
 export default function Dashboard() {
-  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [activeTab, setActiveTab] = useState('upcoming');
 
-  // User's Booking History
-  const bookings = [
-    {
-      id: "BK9824XA",
-      movie: "Interstellar",
-      format: "IMAX 3D • English",
-      cinema: "INOX: R-City Mall",
-      date: "Tomorrow, 7:30 PM",
-      time: "7:30 PM",
-      seats: "J12, J13",
-      amount: "₹550",
-      status: "Upcoming",
-      poster: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop"
-    }
-  ];
-
-  // Live Movies available for Quick Booking
-  const nowShowingMovies = [
-    { id: 1, title: "Interstellar", genre: "Sci-Fi", rating: "9.2", image: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop", videoUrl: "https://cdn.pixabay.com/video/2020/04/18/36551-413123381_tiny.mp4" },
-    { id: 2, title: "Dune: Part Two", genre: "Action", rating: "8.8", image: "https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=1974&auto=format&fit=crop", videoUrl: "https://cdn.pixabay.com/video/2021/08/13/84904-587140837_tiny.mp4" },
-    { id: 3, title: "Oppenheimer", genre: "Drama", rating: "8.9", image: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=2070&auto=format&fit=crop", videoUrl: "https://cdn.pixabay.com/video/2019/11/14/29037-372990474_tiny.mp4" },
-    { id: 4, title: "The Dark Knight", genre: "Action", rating: "9.0", image: "https://images.unsplash.com/photo-1509281373149-e957c6296406?q=80&w=2028&auto=format&fit=crop", videoUrl: "https://cdn.pixabay.com/video/2020/05/25/40141-424610191_tiny.mp4" }
-  ];
+  // Enriched Dummy Data: Now includes movie details for the immersive view
+  const activeTicket = {
+    movie: "Interstellar", 
+    date: "Today, Oct 24", 
+    time: "09:30 PM", 
+    cinema: "CineSync Premium", 
+    location: "Mumbai, Maharashtra",
+    seats: "C4, C5", 
+    qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BK10293X`,
+    backdrop: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1600&q=80",
+    duration: "2h 49m",
+    genre: "Sci-Fi, Adventure, Drama",
+    synopsis: "As Earth's future has been riddled by disasters, famines, and droughts, there is only one way to ensure mankind's survival: Interstellar travel. A newly discovered wormhole in the far reaches of our solar system allows a team of astronauts to go where no man has gone before."
+  };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white pt-24 px-6 relative pb-20">
+    <div className="min-h-screen bg-slate-950 text-slate-50 pt-28 pb-12 px-6">
+      <Helmet><title>My Dashboard | CineSync</title></Helmet>
       
-      {/* Premium Ticket Modal Overlay */}
-      <AnimatePresence>
-        {selectedTicket && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/90 backdrop-blur-md p-6 overflow-y-auto">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }} className="my-auto py-10 w-full">
-               <TicketReceipt booking={selectedTicket} onClose={() => setSelectedTicket(null)} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="container mx-auto max-w-6xl">
+        <h1 className="text-3xl font-black mb-8">My Dashboard</h1>
 
-      <div className="container mx-auto max-w-7xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
-          <p className="text-gray-400">Manage your tickets and discover new releases.</p>
-        </motion.div>
+        {/* Tab Navigation */}
+        <div className="flex gap-2 border-b border-slate-800 mb-8 overflow-x-auto custom-scrollbar">
+          {['upcoming', 'history', 'settings'].map((tab) => (
+            <button 
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-3 text-sm font-bold capitalize transition-colors flex items-center gap-2 border-b-2 ${activeTab === tab ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+            >
+              {tab === 'upcoming' && <Ticket w={16} h={16}/>}
+              {tab === 'history' && <History w={16} h={16}/>}
+              {tab === 'settings' && <Settings w={16} h={16}/>}
+              {tab}
+            </button>
+          ))}
+        </div>
 
-        {/* TOP SECTION: History & Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-          <div className="lg:col-span-2 space-y-6">
-            <h2 className="text-2xl font-semibold flex items-center gap-2">
-              <Ticket className="text-red-500" /> Your Bookings
-            </h2>
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
             
-            {bookings.map((booking, idx) => (
-              <div key={idx} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-gray-700 transition-colors shadow-lg">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h3 className="text-xl font-bold">{booking.movie}</h3>
-                    {booking.status === "Upcoming" && <span className="bg-green-500/20 text-green-500 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Upcoming</span>}
+            {/* IMMERSIVE UPCOMING TICKET VIEW */}
+            {activeTab === 'upcoming' && (
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
+                
+                {/* Cinematic Backdrop Image */}
+                <div className="absolute top-0 w-full h-80 opacity-30 pointer-events-none">
+                  <img src={activeTicket.backdrop} alt="Backdrop" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/80 to-slate-900"></div>
+                </div>
+
+                <div className="relative z-10 p-6 md:p-10">
+                  {/* Movie Header Info */}
+                  <div className="mb-10">
+                    <div className="inline-block px-3 py-1 bg-amber-500 text-slate-950 rounded-full text-xs font-bold uppercase tracking-widest mb-4 shadow-[0_0_15px_rgba(245,158,11,0.4)]">
+                      Next Showing
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-black mb-3">{activeTicket.movie}</h2>
+                    <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-300">
+                      <span className="flex items-center gap-1.5"><Film w={16} h={16} className="text-amber-500"/> {activeTicket.genre}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1.5"><Clock w={16} h={16} className="text-amber-500"/> {activeTicket.duration}</span>
+                    </div>
                   </div>
-                  <p className="text-gray-400 text-sm">{booking.format}</p>
-                  <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-gray-300">
-                    <span className="flex items-center gap-1"><Clock size={16} /> {booking.date.split(',')[0]}</span>
-                    <span>Seats: {booking.seats}</span>
+
+                  {/* Two-Column Layout: Details/Map (Left) vs Ticket (Right) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+                    
+                    {/* Left Column: Synopsis & Map */}
+                    <div className="lg:col-span-2 space-y-8">
+                      <div>
+                        <h3 className="text-lg font-bold text-white mb-3">Synopsis</h3>
+                        <p className="text-slate-400 leading-relaxed text-sm md:text-base">
+                          {activeTicket.synopsis}
+                        </p>
+                      </div>
+
+                      {/* GPS Map Component embedded here */}
+                      <div>
+                        <h3 className="text-lg font-bold text-white mb-3">Theater Location</h3>
+                        <div className="h-[300px] rounded-2xl overflow-hidden border border-slate-800">
+                          <CinemaMap 
+                            cinemaName={activeTicket.cinema} 
+                            location={activeTicket.location} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: The Ticket Stub */}
+                    <div className="lg:col-span-1">
+                      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-8 relative overflow-hidden shadow-xl">
+                        {/* Fake cutout edges for ticket aesthetic */}
+                        <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-slate-900 rounded-full border-r border-slate-800"></div>
+                        <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-slate-900 rounded-full border-l border-slate-800"></div>
+                        
+                        <h3 className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Admit One</h3>
+                        
+                        <div className="bg-white p-4 rounded-2xl mx-auto w-48 h-48 mb-8 border-4 border-slate-800 shadow-inner">
+                          <img src={activeTicket.qrUrl} alt="Entry QR" className="w-full h-full object-contain" />
+                        </div>
+
+                        <div className="space-y-4 border-t border-dashed border-slate-800 pt-6">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-500 text-sm">Date</span>
+                            <span className="text-white font-bold">{activeTicket.date}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-500 text-sm">Time</span>
+                            <span className="text-white font-bold">{activeTicket.time}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-500 text-sm">Theater</span>
+                            <span className="text-white font-bold text-right">{activeTicket.cinema}</span>
+                          </div>
+                          <div className="flex justify-between items-end mt-4 pt-4 border-t border-slate-800">
+                            <span className="text-slate-500 text-sm">Seats</span>
+                            <span className="text-3xl font-black text-amber-500">{activeTicket.seats}</span>
+                          </div>
+                        </div>
+
+                        <p className="text-center text-slate-600 text-[10px] font-bold uppercase mt-8 tracking-widest">Show at Entrance</p>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedTicket(booking)}
-                  className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-xl font-medium transition-colors whitespace-nowrap border border-gray-700"
-                >
-                  View Ticket
-                </button>
               </div>
-            ))}
-          </div>
+            )}
 
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold flex items-center gap-2">
-              <CreditCard className="text-red-500" /> Account Stats
-            </h2>
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-lg">
-              <div className="flex justify-between items-center border-b border-gray-800 pb-4">
-                <span className="text-gray-400">Total Bookings</span>
-                <span className="font-bold text-xl">1</span>
+            {/* HISTORY TAB */}
+            {activeTab === 'history' && (
+              <div className="flex flex-col items-center justify-center py-20 bg-slate-900/50 border border-slate-800 rounded-3xl border-dashed text-center">
+                <History w={48} h={48} className="text-slate-700 mb-4" />
+                <h3 className="text-xl font-bold text-slate-300 mb-1">No Past Bookings</h3>
+                <p className="text-slate-500 text-sm">Movies you have watched will appear here.</p>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Reward Points</span>
-                <span className="font-bold text-xl text-yellow-500">150</span>
+            )}
+
+            {/* SETTINGS TAB */}
+            {activeTab === 'settings' && (
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-2xl">
+                <h3 className="text-lg font-bold mb-6 border-b border-slate-800 pb-4">Profile Information</h3>
+                <form className="space-y-5">
+                  <div>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Full Name</label>
+                    <input type="text" defaultValue="Demo User" className="w-full mt-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none transition-all text-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Email</label>
+                    <input type="email" defaultValue="demo@example.com" disabled className="w-full mt-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-500 opacity-50 cursor-not-allowed" />
+                  </div>
+                  <button type="button" className="bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors">Save Changes</button>
+                </form>
               </div>
-            </div>
-          </div>
-        </div>
+            )}
 
-        {/* BOTTOM SECTION: Quick Booking Grid */}
-        <div className="space-y-8 pt-8 border-t border-gray-900">
-          <h2 className="text-3xl font-bold flex items-center gap-3">
-            <Film className="text-red-500" /> Now Showing
-            <span className="text-sm font-normal text-gray-500 ml-auto bg-gray-900 px-3 py-1 rounded-full border border-gray-800 hidden sm:block">
-              Quick Book
-            </span>
-          </h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {nowShowingMovies.map((movie, index) => (
-              <MovieCard key={movie.id} movie={movie} index={index} />
-            ))}
-          </div>
-        </div>
-
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

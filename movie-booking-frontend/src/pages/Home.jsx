@@ -1,112 +1,88 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Play, Ticket, Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import MovieCard from '../components/MovieCard';
-import MagneticButton from '../components/MagneticButton';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Play, Star, Clapperboard } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 export default function Home() {
-  const navigate = useNavigate();
-  
-  // Track scroll position for the Parallax Effect
-  const { scrollY } = useScroll();
-  // Move the background image down at half the speed of the user's scroll
-  const backgroundY = useTransform(scrollY, [0, 1000], ['0%', '50%']);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('All');
 
-  // Updated Data to include sample video URLs for the hover effect
-  const trendingMovies = [
-    { id: 1, title: "Interstellar", genre: "Sci-Fi", rating: "9.2", image: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop", videoUrl: "https://cdn.pixabay.com/video/2020/04/18/36551-413123381_tiny.mp4" },
-    { id: 2, title: "Dune: Part Two", genre: "Action", rating: "8.8", image: "https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=1974&auto=format&fit=crop", videoUrl: "https://cdn.pixabay.com/video/2021/08/13/84904-587140837_tiny.mp4" },
-    { id: 3, title: "Oppenheimer", genre: "Drama", rating: "8.9", image: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=2070&auto=format&fit=crop", videoUrl: "https://cdn.pixabay.com/video/2019/11/14/29037-372990474_tiny.mp4" },
-    { id: 4, title: "The Dark Knight", genre: "Action", rating: "9.0", image: "https://images.unsplash.com/photo-1509281373149-e957c6296406?q=80&w=2028&auto=format&fit=crop", videoUrl: "https://cdn.pixabay.com/video/2020/05/25/40141-424610191_tiny.mp4" }
+  const filters = ['All', 'Action', 'Sci-Fi', 'IMAX', 'Comedy'];
+  
+  // Mock Data
+  const movies = [
+    { id: 1, title: "Interstellar", genre: "Sci-Fi", format: "IMAX", rating: "9.5", image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=500&q=80" },
+    { id: 2, title: "Dune: Part Two", genre: "Action", format: "IMAX", rating: "9.2", image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&q=80" },
+    { id: 3, title: "Deadpool & Wolverine", genre: "Comedy", format: "3D", rating: "8.8", image: "https://images.unsplash.com/photo-1608889175123-8ee362201f81?w=500&q=80" },
   ];
 
+  // Simulate Network Request
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const filteredMovies = activeFilter === 'All' 
+    ? movies 
+    : movies.filter(m => m.genre === activeFilter || m.format === activeFilter);
+
   return (
-    <div className="bg-gray-950 text-white pb-20 overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-50 pt-28 pb-12 px-6">
+      <Helmet><title>Discover Movies | CineSync</title></Helmet>
       
-      {/* ================= PARALLAX HERO SECTION ================= */}
-      <section className="relative w-full h-[85vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-950/40 via-gray-950/80 to-gray-950 z-10" />
-        
-        {/* Animated Background */}
-        <motion.div 
-          style={{ y: backgroundY }}
-          className="absolute inset-0 w-full h-[120%] -top-[10%]"
-        >
-          <img 
-            src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2025&auto=format&fit=crop" 
-            alt="Cinematic Background" 
-            className="w-full h-full object-cover opacity-50"
-          />
-        </motion.div>
-
-        <div className="relative z-20 container mx-auto px-6 max-w-7xl flex flex-col items-center text-center mt-16">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}
-            className="max-w-4xl flex flex-col items-center"
-          >
-            <span className="px-4 py-1.5 text-xs font-bold tracking-widest uppercase bg-white/10 backdrop-blur-md border border-white/20 rounded-full mb-6 inline-block">
-              Premium Booking Experience
-            </span>
-            <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-6 leading-tight">
-              Experience Cinema <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">Like Never Before.</span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl">
-              Reserve your seats for the latest blockbusters, indie darlings, and immersive IMAX experiences directly from your device.
-            </p>
-            
-            <div className="flex flex-wrap justify-center gap-6">
-              <MagneticButton>
-                <button onClick={() => navigate('/movie/1')} className="flex items-center gap-2 bg-red-600 text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:bg-red-500 transition-colors">
-                  <Ticket size={24} /> Book Tickets
-                </button>
-              </MagneticButton>
-
-              <MagneticButton>
-                <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-colors">
-                  <Play size={24} className="text-red-500" /> Watch Trailers
-                </button>
-              </MagneticButton>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ================= INFINITE MARQUEE ================= */}
-      <div className="w-full border-y border-gray-900 bg-gray-950/50 backdrop-blur-md overflow-hidden py-4 flex whitespace-nowrap z-20 relative">
-        <motion.div 
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ ease: "linear", duration: 20, repeat: Infinity }}
-          className="flex gap-16 text-sm md:text-base font-bold text-gray-500 tracking-widest uppercase items-center"
-        >
-          {/* We repeat the phrase multiple times so it loops seamlessly */}
-          {[...Array(8)].map((_, i) => (
-            <span key={i} className="flex items-center gap-16">
-              <span>IMAX Experiences</span> <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-              <span>Dolby Atmos 3D</span> <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-              <span>Premium Recliners</span> <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-            </span>
+      <div className="container mx-auto max-w-7xl">
+        {/* Filters */}
+        <div className="flex items-center gap-3 overflow-x-auto pb-4 custom-scrollbar mb-8">
+          {filters.map(filter => (
+            <button 
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`whitespace-nowrap px-6 py-2 rounded-full text-sm font-bold transition-all duration-200 ease-out ${activeFilter === filter ? 'bg-amber-500 text-slate-950 shadow-lg' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}`}
+            >
+              {filter}
+            </button>
           ))}
-        </motion.div>
-      </div>
+        </div>
 
-      {/* ================= TRENDING MOVIES ================= */}
-      <section className="container mx-auto px-6 py-24 max-w-7xl relative z-20">
-         <div className="flex justify-between items-end mb-12">
-           <div>
-             <h2 className="text-4xl font-bold mb-2">Trending This Week</h2>
-             <p className="text-gray-400">Hover over a poster to watch the trailer.</p>
-           </div>
-           <MagneticButton>
-            <button className="text-red-500 hover:text-red-400 font-bold tracking-wider uppercase text-sm transition-colors px-4 py-2">View All</button>
-           </MagneticButton>
-         </div>
-         
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {trendingMovies.map((movie, index) => (
-              <MovieCard key={movie.id} movie={movie} index={index} />
+        {/* Movie Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[1, 2, 3, 4].map(n => (
+              <div key={n} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden animate-pulse">
+                <div className="w-full aspect-[2/3] bg-slate-800"></div>
+                <div className="p-5 space-y-3">
+                  <div className="h-5 bg-slate-800 rounded w-3/4"></div>
+                  <div className="h-4 bg-slate-800 rounded w-1/2"></div>
+                </div>
+              </div>
             ))}
-         </div>
-      </section>
+          </div>
+        ) : filteredMovies.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {filteredMovies.map((movie) => (
+              <Link to={`/movie/${movie.id}`} key={movie.id} className="group relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+                <div className="relative w-full aspect-[2/3] overflow-hidden">
+                  <img src={movie.image} alt={movie.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-100" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                  <div className="absolute top-4 right-4 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800 flex items-center gap-1.5 text-xs font-bold text-amber-500">
+                    <Star w={12} h={12} className="fill-amber-500" /> {movie.rating}
+                  </div>
+                </div>
+                <div className="absolute bottom-0 w-full p-5">
+                  <p className="text-xs font-bold text-amber-500 mb-1 uppercase tracking-wider">{movie.format} • {movie.genre}</p>
+                  <h3 className="text-xl font-black text-white group-hover:text-amber-400 transition-colors">{movie.title}</h3>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <Clapperboard w={64} h={64} className="text-slate-800 mb-4" />
+            <h2 className="text-2xl font-bold text-slate-300 mb-2">No Movies Found</h2>
+            <p className="text-slate-500">Try selecting a different genre or format filter.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
