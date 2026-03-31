@@ -1,0 +1,62 @@
+
+CREATE DATABASE cinesync_db;
+USE cinesync_db;
+-- 1. USERS TABLE
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('User', 'Admin') DEFAULT 'User',
+    status ENUM('Active', 'Banned', 'Blacklisted') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. MOVIES TABLE
+CREATE TABLE movies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    poster_url TEXT,
+    trailer_url TEXT,
+    category VARCHAR(100),
+    genre VARCHAR(100),
+    format VARCHAR(50)
+);
+
+-- 3. CINEMAS TABLE
+CREATE TABLE cinemas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    location VARCHAR(255),
+    address TEXT,
+    lat DECIMAL(10, 8),
+    lng DECIMAL(11, 8),
+    premium_format VARCHAR(50),
+    seat_layout JSON -- Storing our complex layout blueprint as a JSON object
+);
+
+-- 4. BOOKINGS TABLE (The "Join" Table)
+CREATE TABLE bookings (
+    id VARCHAR(50) PRIMARY KEY, -- e.g., 'BK10293X'
+    user_id INT,
+    movie_id INT,
+    cinema_id INT,
+    show_date DATE,
+    show_time VARCHAR(50),
+    seats_booked JSON, -- e.g., '["C4", "C5"]'
+    total_amount DECIMAL(10, 2),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (movie_id) REFERENCES movies(id),
+    FOREIGN KEY (cinema_id) REFERENCES cinemas(id)
+);
+
+USE cinesync_db;
+-- Insert an Admin and a regular User
+INSERT INTO users (name, email, password_hash, role, status) VALUES 
+('System Admin', 'admin@cinesync.com', 'admin123', 'Admin', 'Active'),
+('Demo User', 'demo@example.com', 'password123', 'User', 'Active');
+
+-- Insert a couple of Movies
+INSERT INTO movies (title, poster_url, trailer_url, category, genre, format) VALUES 
+('Interstellar', 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=500&q=80', 'https://www.youtube.com/embed/zSWdZVtXT7E', 'Classics', 'Sci-Fi', 'IMAX 3D'),
+('Dune: Part Two', 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&q=80', 'https://www.youtube.com/embed/Way9Dexny3w', 'Trending', 'Action', 'IMAX');

@@ -1,84 +1,107 @@
-import { Armchair } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-export default function SeatMatrix({ selectedSeats, setSelectedSeats, bookedSeats, getSeatDetails }) {
-  const tiers = [
-    { name: "VIP Recliners (₹500)", rows: ['A', 'B'], color: "hover:border-amber-500 hover:text-amber-500" },
-    { name: "Premium (₹250)", rows: ['C', 'D', 'E'], color: "hover:border-indigo-500 hover:text-indigo-500" },
-    { name: "Standard (₹150)", rows: ['F', 'G'], color: "hover:border-slate-400 hover:text-slate-400" }
-  ];
-  const cols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+export default function SeatMatrix({ selectedSeats, setSelectedSeats, bookedSeats, getSeatDetails, layout }) {
+  
+  // Dynamic layout extraction with fallbacks
+  const rows = layout?.rows || ['A', 'B', 'C', 'D', 'E'];
+  const totalCols = layout?.cols || 10;
+  const aislePosition = layout?.aisleAfter || 5;
+
+  const cols = Array.from({ length: totalCols }, (_, i) => i + 1);
 
   const toggleSeat = (seatId) => {
-    if (bookedSeats.includes(seatId)) return;
+    if (bookedSeats.includes(seatId)) return; 
     if (selectedSeats.includes(seatId)) {
       setSelectedSeats(selectedSeats.filter(id => id !== seatId));
     } else {
-      if (selectedSeats.length < 6) {
-        setSelectedSeats([...selectedSeats, seatId]);
-      } else {
-        alert("You can only book up to 6 seats at a time.");
+      if (selectedSeats.length >= 6) {
+        alert("You can only select up to 6 seats per transaction.");
+        return;
       }
+      setSelectedSeats([...selectedSeats, seatId]);
     }
   };
 
   return (
-    <div className="w-full flex flex-col">
-      <h2 className="text-2xl font-bold mb-8 text-white">Select Your Seats</h2>
+    <div className="flex flex-col items-center w-full">
       
-      {/* Screen Curve Graphic */}
-      <div className="relative w-full h-12 mb-16 flex justify-center mt-4">
-        <div className="absolute top-0 w-4/5 h-full border-t-4 border-white/80 rounded-t-[100%] opacity-40 shadow-[0_-20px_60px_rgba(255,255,255,0.3)]"></div>
-        <span className="absolute top-8 text-slate-400 text-xs font-bold uppercase tracking-[0.4em]">Screen This Way</span>
+      {/* 1. The Glowing Screen */}
+      <div className="w-full max-w-2xl mb-12 relative flex flex-col items-center">
+        <div className="w-full h-2 bg-amber-500/50 rounded-full blur-[2px]"></div>
+        <div className="w-full h-12 bg-gradient-to-b from-amber-500/20 to-transparent -mt-1 blur-xl"></div>
+        <div className="absolute top-4 text-amber-500/50 text-xs font-bold tracking-[0.3em] uppercase">Cinema Screen</div>
       </div>
 
-      <div className="w-full overflow-x-auto pb-8 custom-scrollbar">
-        <div className="min-w-max flex flex-col items-center mx-auto space-y-8">
-          {tiers.map((tier, tIdx) => (
-            <div key={tIdx} className="w-full flex flex-col items-center">
-              <span className="text-[10px] uppercase tracking-widest text-slate-400 mb-4 font-bold bg-slate-950 px-4 py-1 rounded-full border border-slate-800">
-                {tier.name}
-              </span>
-              <div className="flex flex-col gap-4">
-                {tier.rows.map((row) => (
-                  <div key={row} className="flex gap-4 items-center">
-                    <span className="text-slate-500 font-bold w-6 text-right">{row}</span>
-                    <div className="flex gap-2 sm:gap-3">
-                      {cols.map((col) => {
-                        const seatId = `${row}${col}`;
-                        const isBooked = bookedSeats.includes(seatId);
-                        const isSelected = selectedSeats.includes(seatId);
-                        const seatDetails = getSeatDetails(seatId);
+      {/* 2. DYNAMIC Seat Grid */}
+      <div className="flex flex-col gap-4 mb-10 overflow-x-auto w-full max-w-3xl pb-4 custom-scrollbar">
+        {rows.map((row) => (
+          <div key={row} className="flex items-center justify-center gap-2 sm:gap-4 min-w-max mx-auto">
+            <div className="w-6 text-center font-bold text-slate-500 text-sm">{row}</div>
+            
+            <div className="flex gap-2">
+              {cols.map((col) => {
+                const seatId = `${row}${col}`;
+                const isBooked = bookedSeats.includes(seatId);
+                const isSelected = selectedSeats.includes(seatId);
+                const isAisle = col === aislePosition;
+                const details = getSeatDetails(seatId);
 
-                        return (
-                          <button
-                            key={seatId}
-                            onClick={() => toggleSeat(seatId)}
-                            disabled={isBooked}
-                            // Clean, snappy Tailwind transitions instead of bouncy springs
-                            className={`w-8 h-8 sm:w-10 sm:h-10 rounded-t-xl rounded-b-md flex items-center justify-center border transition-all duration-200 ease-out 
-                              ${isBooked ? 'bg-slate-950/50 text-slate-800 border-slate-800/50 cursor-not-allowed' : 
-                                isSelected ? `${seatDetails.bg} text-white shadow-lg border-transparent scale-105` : 
-                                `bg-slate-800/50 text-transparent border-slate-700 ${tier.color} hover:-translate-y-1 hover:shadow-md active:translate-y-0 active:scale-[0.98]`}`}
-                          >
-                            <Armchair size={18} className={isBooked ? 'opacity-10' : ''} />
-                          </button>
-                        );
-                      })}
-                    </div>
+                return (
+                  <div key={seatId} className={`flex items-center ${isAisle ? 'mr-6 sm:mr-10' : ''}`}>
+                    <button
+                      disabled={isBooked}
+                      onClick={() => toggleSeat(seatId)}
+                      title={`${details.tier} - ₹${details.price}`}
+                      className={`
+                        w-8 h-8 sm:w-10 sm:h-10 rounded-t-xl rounded-b-md transition-all duration-300 relative group overflow-hidden
+                        ${isBooked ? 'bg-slate-800 opacity-50 cursor-not-allowed shadow-none' : isSelected ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] scale-110 -translate-y-1' : `${details.bg} hover:-translate-y-1 hover:brightness-125`}
+                      `}
+                    >
+                      <div className={`absolute bottom-0 w-full h-1/3 bg-black/20 rounded-b-md`}></div>
+                      {!isBooked && (
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                          {col}
+                        </span>
+                      )}
+                    </button>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          ))}
+
+            <div className="w-6 text-center font-bold text-slate-500 text-sm">{row}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 3. The Interactive Legend */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 w-full max-w-3xl">
+        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 text-center border-b border-slate-800 pb-3">Seat Legend</h4>
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-t-md bg-slate-800 opacity-50"></div>
+            <span className="text-sm font-medium text-slate-400">Booked</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-t-md bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"></div>
+            <span className="text-sm font-bold text-white">Selected</span>
+          </div>
+          <div className="w-px h-6 bg-slate-800 hidden sm:block"></div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-t-md bg-amber-500"></div>
+            <span className="text-sm font-medium text-slate-300">VIP</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-t-md bg-indigo-500"></div>
+            <span className="text-sm font-medium text-slate-300">Premium</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-t-md bg-slate-500"></div>
+            <span className="text-sm font-medium text-slate-300">Standard</span>
+          </div>
         </div>
       </div>
-      
-      {/* Pricing Legend */}
-      <div className="flex flex-wrap justify-center gap-6 mt-8 text-xs font-bold uppercase tracking-wider text-slate-400 border-t border-slate-800 pt-8">
-        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-amber-500 rounded-sm"></div> VIP (₹500)</div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-indigo-500 rounded-sm"></div> Premium (₹250)</div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-slate-500 rounded-sm"></div> Standard (₹150)</div>
-      </div>
+
     </div>
   );
 }

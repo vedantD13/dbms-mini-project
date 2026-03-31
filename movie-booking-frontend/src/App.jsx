@@ -1,64 +1,74 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
-import { Toaster } from 'react-hot-toast'; // Global notifications
-
-import { AuthProvider } from './context/AuthContext';
-import { BookingProvider } from './context/BookingContext'; // New Booking State
-
-// Layouts & Utilities
-import MainLayout from './layouts/MainLayout';
-import ProtectedRoute from './components/ProtectedRoute';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { BookingProvider, useBooking } from './context/BookingContext';
 
 // Pages
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
-import MovieInfo from './pages/MovieInfo';
-import Showtimes from './pages/Showtimes';
-import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
-import NotFound from './pages/NotFound'; // New 404 Page
+
+// 🛡️ GUARD 1: Prevent logged-in users from seeing the Auth page
+const AuthRoute = ({ children }) => {
+  const { currentUser } = useBooking();
+  // If they are already logged in, push them directly to their proper dashboard
+  if (currentUser) {
+    return <Navigate to={currentUser.role === 'Admin' ? '/admin' : '/dashboard'} replace />;
+  }
+  return children;
+};
+
+// 🛡️ GUARD 2: Protect standard user routes
+const ProtectedRoute = ({ children }) => {
+  const { currentUser } = useBooking();
+  // If they are not logged in at all, kick them back to login
+  if (!currentUser) return <Navigate to="/login" replace />;
+  return children;
+};
+
+// 🛡️ GUARD 3: Protect Admin-only routes
+const AdminRoute = ({ children }) => {
+  const { currentUser } = useBooking();
+  // Not logged in? Go to login.
+  if (!currentUser) return <Navigate to="/login" replace />; 
+  // Logged in, but NOT an admin? Kick them to the regular user dashboard.
+  if (currentUser.role !== 'Admin') return <Navigate to="/dashboard" replace />;
+  return children;
+};
 
 export default function App() {
   return (
-    <HelmetProvider>
-      <AuthProvider>
-        <BookingProvider>
-          <BrowserRouter>
-            {/* Global Toast Notifications Config */}
-            <Toaster 
-              position="top-center" 
-              toastOptions={{ 
-                style: { background: '#1e293b', color: '#f8fafc', borderRadius: '12px', border: '1px solid #334155' } 
-              }} 
-            />
-            
-            <Routes>
-              <Route element={<MainLayout />}>
-                
-                {/* PUBLIC ROUTES */}
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/movie/:id" element={<MovieInfo />} />
-                <Route path="/buytickets/:id" element={<Showtimes />} />
-                
-                {/* PROTECTED ROUTES */}
-                <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                
-                {/* ADMIN ROUTE */}
-                <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />
+    // The BookingProvider MUST wrap the Router so all pages can access the database
+    <BookingProvider>
+      <Router>
+        {/* Global Toast Notifications Config */}
+        <Toaster 
+          position="top-right" 
+          toastOptions={{
+            style: {
+              background: '#020617', // slate-950
+              color: '#f8fafc', // slate-50
+              border: '1px solid #1e293b', // slate-800
+            },
+          }} 
+        />
+        
+        <Routes>
+          {/* Public / Auth Routes */}
+          {/* Both /login and /signup render the same Auth component, which toggles internally */}
+          <Route path="/login" element={<AuthRoute><Auth /></AuthRoute>} />
+          <Route path="/signup" element={<AuthRoute><Auth /></AuthRoute>} />
 
-                {/* 404 NOT FOUND ROUTE */}
-                <Route path="*" element={<NotFound />} />
+          {/* Protected Dashboards */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
-              </Route>
-            </Routes>
-          </BrowserRouter>
-        </BookingProvider>
-      </AuthProvider>
-    </HelmetProvider>
+          {/* Fallback Routes */}
+          {/* Base URL automatically redirects to login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Any random/broken URL automatically redirects to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
+    </BookingProvider>
   );
 }
