@@ -30,15 +30,21 @@ export default function AdminDashboard() {
   const handleAddMovie = (e) => {
     e.preventDefault();
     let finalTrailerUrl = movieForm.trailerUrl.includes('watch?v=') ? movieForm.trailerUrl.replace('watch?v=', 'embed/') : movieForm.trailerUrl;
-    addMovie({ ...movieForm, trailerUrl: finalTrailerUrl });
+    addMovie({
+      ...movieForm,
+      trailerUrl: finalTrailerUrl,
+      trailer_url: finalTrailerUrl,
+      poster_url: movieForm.poster
+    });
     toast.success(`"${movieForm.title}" published!`);
-    setMovieForm({ title: '', poster: '', genre: 'Action', format: 'IMAX 3D', category: 'Now Showing', trailerUrl: '' }); 
+    setMovieForm({ title: '', poster: '', genre: 'Action', format: 'IMAX 3D', category: 'Now Showing', trailerUrl: '' });
   };
 
   const handleUpdateMovie = (e) => {
     e.preventDefault();
-    let finalTrailerUrl = editingMovie.trailerUrl.includes('watch?v=') ? editingMovie.trailerUrl.replace('watch?v=', 'embed/') : editingMovie.trailerUrl;
-    editMovie(editingMovie.id, { ...editingMovie, trailerUrl: finalTrailerUrl });
+    const rawTrailer = editingMovie.trailer_url || editingMovie.trailerUrl || '';
+    let finalTrailerUrl = rawTrailer.includes('watch?v=') ? rawTrailer.replace('watch?v=', 'embed/') : rawTrailer;
+    editMovie(editingMovie.id, { ...editingMovie, trailer_url: finalTrailerUrl, trailerUrl: finalTrailerUrl });
     toast.success("Movie updated successfully!");
     setEditingMovie(null);
   };
@@ -79,11 +85,11 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-400 uppercase">Poster URL</label>
-                    <input required value={editingMovie.poster} onChange={e => setEditingMovie({...editingMovie, poster: e.target.value})} type="url" className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none text-white" />
+                    <input required value={editingMovie.poster_url || editingMovie.poster || ''} onChange={e => setEditingMovie({...editingMovie, poster_url: e.target.value, poster: e.target.value})} type="url" className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none text-white" />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-400 uppercase">YouTube Trailer URL</label>
-                    <input value={editingMovie.trailerUrl} onChange={e => setEditingMovie({...editingMovie, trailerUrl: e.target.value})} type="url" className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none text-white" />
+                    <input value={editingMovie.trailer_url || editingMovie.trailerUrl || ''} onChange={e => setEditingMovie({...editingMovie, trailer_url: e.target.value, trailerUrl: e.target.value})} type="url" className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none text-white" />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-400 uppercase">Category</label>
@@ -153,7 +159,7 @@ export default function AdminDashboard() {
                     movies.map((movie) => (
                       <div key={movie.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors shadow-sm">
                         <div className="flex items-center gap-4">
-                          <img src={movie.poster} alt={movie.title} className="w-12 h-16 object-cover rounded-lg shadow-md border border-slate-700" />
+                          <img src={movie.poster_url || movie.poster} alt={movie.title} className="w-12 h-16 object-cover rounded-lg shadow-md border border-slate-700" />
                           <div>
                             <h4 className="text-lg font-bold text-white leading-tight">{movie.title}</h4>
                             <div className="flex gap-2 mt-1">
